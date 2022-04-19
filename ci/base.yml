@@ -1,0 +1,59 @@
+header:
+  version: 9
+
+distro: poky
+
+defaults:
+  repos:
+    refspec: master
+
+repos:
+  meta-ledge-secure:
+    path: meta-ledge-secure
+  poky:
+    url: https://git.yoctoproject.org/git/poky
+    refspec: 0539b563c6f41fef383429a13c28bf918231d404
+    layers:
+      meta:
+      meta-poky:
+    patches:
+      p1:
+        repo : poky
+        path : ../patches/0001-wic-add-UEFI-kernel-as-UEFI-stub.patch
+      p2:
+        repo : poky
+        path : ../patches/0002-wic-bootimg-efi-implement-include-path.patch
+  meta-arm:
+    url: git://git.yoctoproject.org/meta-arm
+    refspec: 962173714f8da22fce50d99d2cbe7d32bb11a88d
+    layers:
+      meta-arm:
+      meta-arm-bsp:
+      meta-arm-toolchain:
+  meta-trustedsubstrate:
+    url: https://git.codelinaro.org/linaro/dependable-boot/meta-ts.git
+
+env:
+  BB_LOGCONFIG: ""
+  TOOLCHAIN_DIR: ""
+
+local_conf_header:
+  base: |
+    CONF_VERSION = "2"
+    PACKAGE_CLASSES = "package_ipk"
+    LICENSE_FLAGS_ACCEPTED += "armcompiler Arm-FVP-EULA"
+    PACKAGECONFIG:remove:pn-qemu-system-native = "gtk+ sdl"
+    EXTRA_IMAGE_FEATURES:append = " debug-tweaks"
+    BB_NUMBER_THREADS = "16"
+    PARALLEL_MAKE = "-j16"
+    INHERIT += "rm_work"
+    PACKAGECONFIG:append:pn-perf = " coresight"
+    BB_ENV_PASSTHROUGH_ADDITIONS = "UEFI_CERT_FILE"
+    UEFI_CERT_FILE = "${TOPDIR}/../meta-trustedsubstrate/uefi-certificates/uefi_certs.tgz"
+  noptest: |
+    DISTRO_FEATURES:remove = "ptest"
+
+machine: unset
+
+target:
+  - ts-firmware
