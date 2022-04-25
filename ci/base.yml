@@ -74,5 +74,4 @@ local_conf_header:
 machine: unset
 
 target:
-  - core-image-minimal
   - ledge-minimal
