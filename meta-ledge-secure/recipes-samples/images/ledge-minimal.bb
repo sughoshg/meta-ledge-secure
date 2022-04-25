@@ -8,5 +8,6 @@ inherit core-image features_check extrausers
 
 CORE_IMAGE_BASE_INSTALL += " \
     kernel-modules \
+    kernel-devicetree \
     "
-#    kernel-devicetree
+
