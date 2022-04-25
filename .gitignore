@@ -4,4 +4,7 @@ meta-openembedded
 meta-meta-openembedded
 meta-python
 meta-secure-core
+meta-security
+meta-selinux
+meta-trustedsubstrate
 poky

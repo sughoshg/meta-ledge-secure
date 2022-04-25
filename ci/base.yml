@@ -12,7 +12,7 @@ repos:
     path: meta-ledge-secure
   poky:
     url: https://git.yoctoproject.org/git/poky
-    refspec: 0539b563c6f41fef383429a13c28bf918231d404
+    refspec: honister
     layers:
       meta:
       meta-poky:
@@ -32,6 +32,24 @@ repos:
       meta-arm-toolchain:
   meta-trustedsubstrate:
     url: https://git.codelinaro.org/linaro/dependable-boot/meta-ts.git
+    layers:
+      meta-trustedsubstrate:
+  meta-secure-core:
+    url: https://github.com/jiazhang0/meta-secure-core
+    layers:
+      meta:
+      meta-tpm2:
+      meta-encrypted-storage:
+      meta-efi-secure-boot:
+      meta-signing-key:
+  meta-security:
+    url: http://git.yoctoproject.org/git/meta-security
+    refspec: honister
+    layers:
+      meta-tpm:
+  meta-selinux:
+    url: http://git.yoctoproject.org/git/meta-selinux
+    refspec: honister
 
 env:
   BB_LOGCONFIG: ""
@@ -56,4 +74,5 @@ local_conf_header:
 machine: unset
 
 target:
-  - ts-firmware
+  - core-image-minimal
+  - ledge-minimal
