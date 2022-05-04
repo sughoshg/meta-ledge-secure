@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "\
     file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302 \
 "
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += "file://init.ledge \
 			file://init.cryptfs"
@@ -20,14 +20,14 @@ do_install() {
     mknod -m 0600 "${D}/dev/console" c 5 1
 }
 
-FILES:${PN} = "\
+FILES_${PN} = "\
     /init \
     /init.cryptfs \
     /dev \
     /run \
 "
 
-RDEPENDS:${PN} += "\
+RDEPENDS_${PN} += "\
     coreutils \
     util-linux-mount \
     grep \

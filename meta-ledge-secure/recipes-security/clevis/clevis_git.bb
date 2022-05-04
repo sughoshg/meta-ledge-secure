@@ -19,8 +19,8 @@ S="${WORKDIR}/git"
 
 inherit meson pkgconfig systemd
 
-DEPENDS = "audit jose cmake-native luksmeta openssl tpm2-tools cryptsetup jq libpwquality systemd udisks2"
-RDEPENDS:${PN} = "bash cryptsetup libpwquality"
+DEPENDS = "jose cmake-native luksmeta openssl tpm2-tools cryptsetup jq libpwquality systemd udisks2"
+RDEPENDS_${PN} = "bash cryptsetup libpwquality"
 
-FILES:${PN} += "/usr /lib"
+FILES_${PN} += "/usr /lib"
 

@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 DESCRIPTION = "Small ramdisk image for running tests (bootrr, etc)"
 PR="r3.ledge"
@@ -25,18 +25,18 @@ PACKAGE_INSTALL = " \
    kernel-module-tpm-tis-core \
    ${@bb.utils.contains("MACHINE_FEATURES", "optee", "optee-client", "", d)} \
    e2fsprogs-mke2fs \
+   tpm2-abrmd \
+   tpm2-tss \
+   tpm2-tss-engine \
    dbus \
    clevis \
    ledge-init \
-   tpm2-abrmd \
-   tpm2-tss \
-   tpm2-tss-engine\
 "
 
-PACKAGE_INSTALL:append_ledge-qemuarm += " \
+PACKAGE_INSTALL_append_ledge-qemuarm += " \
 		kernel-module-tpm-ftpm-tee "
 
-PACKAGE_INSTALL:append_ledge-qemuarm64 += " \
+PACKAGE_INSTALL_append_ledge-qemuarm64 += " \
 		kernel-module-tpm-ftpm-tee "
 
 
