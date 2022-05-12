@@ -10,7 +10,7 @@ SRC_URI:append = " file://fragment-2-module-signature.config "
 KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/fragment-1-selinux.config "
 KERNEL_CONFIG_FRAGMENTS:append = " ${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', '${WORKDIR}/fragment-2-module-signature.config','')} "
 
-do_configure_ammend() {
+do_configure_append() {
     if [ ! -z "${KERNEL_CONFIG_FRAGMENTS}" ]; then
         for f in ${KERNEL_CONFIG_FRAGMENTS}
         do
@@ -62,6 +62,14 @@ do_install_append() {
     done
 }
 
-FILES_${KERNEL_PACKAGE_NAME}-devicetree += "/${KERNEL_IMAGEDEST}/dtb"
+do_deploy_append() {
+	mkdir -p ${DEPLOYDIR}/dtb
+    if [ -d ${WORKDIR}/package/boot/dtb ];then
+        cp -rf ${WORKDIR}/package/boot/dtb ${DEPLOYDIR}/
+    fi
+}
+
+# FILES_${KERNEL_PACKAGE_NAME}-devicetree += "/${KERNEL_IMAGEDEST}/dtb"
+FILES_${KERNEL_PACKAGE_NAME}-base += "/${KERNEL_IMAGEDEST}/dtb"
 FILES_${KERNEL_PACKAGE_NAME}-base += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/modules.builtin.modinfo "
 FILES_${KERNEL_PACKAGE_NAME}-base += "${base_libdir}/modprobe.d"
