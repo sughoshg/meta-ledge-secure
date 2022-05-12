@@ -3,6 +3,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 DESCRIPTION = "Small ramdisk image for running tests (bootrr, etc)"
 PR="r3.ledge"
 
+DEPENDS += "linux-yocto"
+
 # Always fetch the latest initramfs image
 do_install[nostamp] = "1"
 
@@ -20,9 +22,6 @@ PACKAGE_INSTALL = " \
    bash \
    ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'udev', 'eudev', d)} \
    rng-tools \
-   kernel-module-dm-crypt \
-   kernel-module-tpm-tis \
-   kernel-module-tpm-tis-core \
    ${@bb.utils.contains("MACHINE_FEATURES", "optee", "optee-client", "", d)} \
    e2fsprogs-mke2fs \
    tpm2-abrmd \
@@ -32,6 +31,10 @@ PACKAGE_INSTALL = " \
    clevis \
    ledge-init \
 "
+
+#   kernel-module-dm-crypt
+#   kernel-module-tpm-tis
+#   kernel-module-tpm-tis-core
 
 PACKAGE_INSTALL_append_ledge-qemuarm += " \
 		kernel-module-tpm-ftpm-tee "
@@ -51,6 +54,7 @@ LICENSE = "MIT"
 IMAGE_FSTYPES = "${INITRAMFS_FSTYPES}"
 inherit core-image
 
+INITRAMFS_MAXSIZE ?= "307200"
 IMAGE_ROOTFS_SIZE = "65536"
 IMAGE_ROOTFS_EXTRA_SPACE = "4096"
 
