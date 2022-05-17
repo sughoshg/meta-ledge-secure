@@ -6,9 +6,11 @@ EXTRA_OEMAKE += "${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', 'INST
 
 SRC_URI:append = " file://fragment-1-selinux.config "
 SRC_URI:append = " file://fragment-2-module-signature.config "
+SRC_URI:append = " file://fragment-3-secure.config "
 
 KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/fragment-1-selinux.config "
 KERNEL_CONFIG_FRAGMENTS:append = " ${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', '${WORKDIR}/fragment-2-module-signature.config','')} "
+KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/fragment-3-secure.config "
 
 do_configure_append() {
     if [ ! -z "${KERNEL_CONFIG_FRAGMENTS}" ]; then

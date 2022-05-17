@@ -32,11 +32,13 @@ PACKAGE_INSTALL = " \
    ledge-init \
 "
 
-# PACKAGE_INSTALL_appendm += " \
-#		kernel-module-tpm-ftpm-tee "
+PACKAGE_INSTALL_appendm += " \
+	kernel-module-tpm-ftpm-tee \
+	kernel-module-tpm-tis \
+	kernel-module-tpm-tis-core \
+	"
+
 #   kernel-module-dm-crypt
-#   kernel-module-tpm-tis
-#   kernel-module-tpm-tis-core
 
 # Do not pollute the initrd image with rootfs features
 IMAGE_FEATURES = ""
