@@ -1,5 +1,6 @@
 DEPENDS:append += " e2fsprogs-native  efitools-native  coreutils-native "
 
+FILESEXTRAPATHS:prepend := "${THISDIR}/files/:"
 SRC_URI:append = " file://uefi-certificates/KEK.auth "
 SRC_URI:append = " file://uefi-certificates/KEK.crt "
 SRC_URI:append = " file://uefi-certificates/KEK.key "

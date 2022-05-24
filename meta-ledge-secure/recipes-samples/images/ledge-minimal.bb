@@ -7,10 +7,10 @@ inherit core-image features_check extrausers
 IMAGE_FEATURES += "package-management ssh-server-openssh allow-empty-password"
 # REQUIRED_DISTRO_FEATURES = "pam systemd"
 
-CORE_IMAGE_BASE_INSTALL += " \
-    kernel-modules \
-    kernel-devicetree \
-    "
+#CORE_IMAGE_BASE_INSTALL += " \
+#    kernel-modules \
+#    kernel-devicetree \
+#    "
 
 CORE_IMAGE_BASE_INSTALL += "\
     ${@bb.utils.contains("MACHINE_FEATURES", "optee", "packagegroup-ledge-optee", "", d)} \
