@@ -32,13 +32,11 @@ PACKAGE_INSTALL = " \
    tpm2-tss \
    tpm2-tss-engine\
 "
-
-PACKAGE_INSTALL:append_ledge-qemuarm += " \
-		kernel-module-tpm-ftpm-tee "
-
-PACKAGE_INSTALL:append_ledge-qemuarm64 += " \
-		kernel-module-tpm-ftpm-tee "
-
+PACKAGE_INSTALL:append += " \
+    kernel-module-tpm-ftpm-tee \
+    kernel-module-tpm-tis \
+    kernel-module-tpm-tis-core \
+    "
 
 # Do not pollute the initrd image with rootfs features
 IMAGE_FEATURES = ""
