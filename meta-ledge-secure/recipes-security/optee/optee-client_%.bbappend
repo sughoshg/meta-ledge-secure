@@ -6,7 +6,7 @@ COMPATIBLE_MACHINE = "(ledge-qemuarm64|ledge-qemuarm)"
 PV="3.16.0+git${SRCPV}"
 SRCREV_ledgecommon = "06db73b3f3fdb8d23eceaedbc46c49c0b45fd1e2"
 
-DEPENDS:append_ledgecommon += "python3-pycryptodomex-native python3-pycrypto-native"
+DEPENDS:append_ledgecommon = "python3-pycryptodomex-native python3-pycrypto-native"
 
 SRC_URI:append = " \
 file://0001-libckteec-add-support-for-ECDH-derive.patch \
