@@ -32,7 +32,7 @@ PACKAGE_INSTALL = " \
    ledge-init \
 "
 
-PACKAGE_INSTALL:appendm += " \
+PACKAGE_INSTALL:appendm = " \
 	kernel-module-tpm-ftpm-tee \
 	kernel-module-tpm-tis \
 	kernel-module-tpm-tis-core \
