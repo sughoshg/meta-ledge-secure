@@ -61,7 +61,7 @@ IMAGE_CMD_ledgebootfs () {
 }
 
 # Final stage - compress and create symlinks
-IMAGE_CMD_ledgebootfs_append() {
+IMAGE_CMD_ledgebootfs:append() {
     (cd ${IMGDEPLOYDIR};ln -sf ${IMAGE_NAME}.bootfs.vfat ${IMAGE_LINK_NAME}.bootfs.vfat)
     (cd ${IMGDEPLOYDIR};gzip -f -9 -c ${IMAGE_NAME}.bootfs.vfat > ${IMAGE_NAME}.bootfs.vfat.gz)
     (cd ${IMGDEPLOYDIR};cp ${IMAGE_NAME}.bootfs.vfat.gz ${IMAGE_LINK_NAME}.bootfs.vfat.gz)

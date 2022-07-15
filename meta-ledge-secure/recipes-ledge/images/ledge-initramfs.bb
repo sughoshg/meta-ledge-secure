@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 DESCRIPTION = "Small ramdisk image for running tests (bootrr, etc)"
 PR="r3.ledge"
@@ -32,7 +32,7 @@ PACKAGE_INSTALL = " \
    ledge-init \
 "
 
-PACKAGE_INSTALL_appendm += " \
+PACKAGE_INSTALL:appendm += " \
 	kernel-module-tpm-ftpm-tee \
 	kernel-module-tpm-tis \
 	kernel-module-tpm-tis-core \

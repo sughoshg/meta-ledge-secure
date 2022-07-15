@@ -12,7 +12,7 @@ KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/fragment-1-selinux.config "
 KERNEL_CONFIG_FRAGMENTS:append = " ${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', '${WORKDIR}/fragment-2-module-signature.config','')} "
 KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/fragment-3-secure.config "
 
-do_configure_append() {
+do_configure:append() {
     if [ ! -z "${KERNEL_CONFIG_FRAGMENTS}" ]; then
         for f in ${KERNEL_CONFIG_FRAGMENTS}
         do
@@ -38,7 +38,7 @@ do_configure_append() {
 }
 
 
-do_install_append() {
+do_install:append() {
     if [ ! -d ${D}/boot/dtb ]; then
         # force the creation of dtb directory on boot to have
         install -d ${D}/boot/dtb
@@ -64,14 +64,13 @@ do_install_append() {
     done
 }
 
-do_deploy_append() {
+do_deploy:append() {
 	mkdir -p ${DEPLOYDIR}/dtb
     if [ -d ${WORKDIR}/package/boot/dtb ];then
         cp -rf ${WORKDIR}/package/boot/dtb ${DEPLOYDIR}/
     fi
 }
 
-# FILES_${KERNEL_PACKAGE_NAME}-devicetree += "/${KERNEL_IMAGEDEST}/dtb"
-FILES_${KERNEL_PACKAGE_NAME}-base += "/${KERNEL_IMAGEDEST}/dtb"
-FILES_${KERNEL_PACKAGE_NAME}-base += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/modules.builtin.modinfo "
-FILES_${KERNEL_PACKAGE_NAME}-base += "${base_libdir}/modprobe.d"
+FILES:${KERNEL_PACKAGE_NAME}-base += "/${KERNEL_IMAGEDEST}/dtb"
+FILES:${KERNEL_PACKAGE_NAME}-base += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/modules.builtin.modinfo "
+FILES:${KERNEL_PACKAGE_NAME}-base += "${base_libdir}/modprobe.d"
