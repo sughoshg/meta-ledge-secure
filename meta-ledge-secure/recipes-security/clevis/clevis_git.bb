@@ -22,5 +22,5 @@ inherit meson pkgconfig systemd
 DEPENDS = "jose cmake-native luksmeta openssl tpm2-tools cryptsetup jq libpwquality systemd udisks2"
 RDEPENDS_${PN} = "bash cryptsetup libpwquality"
 
-FILES_${PN} += "/usr /lib"
+FILES:${PN} += "/usr /lib"
 
