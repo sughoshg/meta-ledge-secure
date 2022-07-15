@@ -20,14 +20,14 @@ do_install() {
     mknod -m 0600 "${D}/dev/console" c 5 1
 }
 
-FILES_${PN} = "\
+FILES:${PN} = "\
     /init \
     /init.cryptfs \
     /dev \
     /run \
 "
 
-RDEPENDS_${PN} += "\
+RDEPENDS:${PN} += "\
     coreutils \
     util-linux-mount \
     grep \
