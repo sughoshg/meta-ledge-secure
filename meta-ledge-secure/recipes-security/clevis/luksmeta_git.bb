@@ -18,4 +18,4 @@ inherit pkgconfig autotools
 
 DEPENDS = "zlib jansson openssl cryptsetup"
 
-FILES_${PN} += "/usr"
+FILES:${PN} += "/usr"
