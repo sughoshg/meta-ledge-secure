@@ -18,4 +18,4 @@ inherit meson pkgconfig systemd
 
 DEPENDS = "zlib cmake-native jansson openssl"
 
-FILES_${PN} += "/usr"
+FILES:${PN} += "/usr"
