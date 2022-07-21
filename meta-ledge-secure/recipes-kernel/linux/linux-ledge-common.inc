@@ -37,6 +37,13 @@ do_configure:append() {
     cp -a ${B}/defconfig ${DEPLOYDIR}
 }
 
+do_compile:append:aarch64() {
+    oe_runmake -C ${B} dtbs
+}
+
+do_install:append:aarch64() {
+    oe_runmake -C ${B} DEPMOD=echo INSTALL_DTBS_PATH=${D}/boot/dtb dtbs_install
+}
 
 do_install:append() {
     if [ ! -d ${D}/boot/dtb ]; then
