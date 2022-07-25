@@ -4,38 +4,14 @@ DEPENDS += "coreutils-native"
 
 EXTRA_OEMAKE += "${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', 'INSTALL_MOD_STRIP=1','')}"
 
-SRC_URI:append = " file://fragment-1-selinux.config "
-SRC_URI:append = " file://fragment-2-module-signature.config "
-SRC_URI:append = " file://fragment-3-secure.config "
+FILESEXTRAPATHS:prepend:ewaol := "${THISDIR}:${THISDIR}/linux-yocto:"
 
-KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/fragment-1-selinux.config "
-KERNEL_CONFIG_FRAGMENTS:append = " ${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', '${WORKDIR}/fragment-2-module-signature.config','')} "
-KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/fragment-3-secure.config "
+SRC_URI:append = " file://ledge-kmeta;type=kmeta;name=ledge-kmeta;destsuffix=ledge-kmeta"
 
-do_configure:append() {
-    if [ ! -z "${KERNEL_CONFIG_FRAGMENTS}" ]; then
-        for f in ${KERNEL_CONFIG_FRAGMENTS}
-        do
-            # Check if the config fragment was copied into the WORKDIR from
-            # the OE meta data
-            if [ ! -e "$f" ]; then
-                echo "Could not find kernel config fragment $f"
-                exit 1
-            fi
-        done
-
-        bbnote "${S}/scripts/kconfig/merge_config.sh -m -r -O ${B} ${B}/.config ${KERNEL_CONFIG_FRAGMENTS} 1>&2"
-        # Now that all the fragments are located merge them.
-        (${S}/scripts/kconfig/merge_config.sh -m -r -O ${B} ${B}/.config ${KERNEL_CONFIG_FRAGMENTS} 1>&2 )
-    fi
-
-    yes '' | oe_runmake -C ${S} O=${B} CC="${KERNEL_CC}" LD="${KERNEL_LD}" oldconfig
-    #oe_runmake -C ${S} O=${B} savedefconfig && cp ${B}/defconfig ${WORKDIR}/defconfig.saved
-
-    bbplain "Saving defconfig to:\n${B}/defconfig"
-    oe_runmake -C ${B} savedefconfig
-    cp -a ${B}/defconfig ${DEPLOYDIR}
-}
+KERNEL_FEATURES:append = " fragment-1-selinux.cfg "
+KERNEL_FEATURES:append = " ${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', 'fragment-2-module-signature.cfg','')} "
+KERNEL_FEATURES:append = " fragment-3-secure.cfg "
+KERNEL_FEATURES:append = " defconfig "
 
 do_compile:append:aarch64() {
     oe_runmake -C ${B} dtbs
