@@ -3,7 +3,7 @@ SUMMARY = "Python3 related packages"
 inherit packagegroup
 
 # contains basic dependencies for network tools
-RDEPENDS_packagegroup-ledge-python3 = " \
+RDEPENDS:packagegroup-ledge-python3 = " \
     python3 \
     python3-asn1crypto \
     python3-babel \
