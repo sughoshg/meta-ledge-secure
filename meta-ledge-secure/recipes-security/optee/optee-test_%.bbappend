@@ -5,7 +5,7 @@ SRC_URI = "git://github.com/OP-TEE/optee_test.git;protocol=https"
 PV="3.16.0+git${SRCPV}"
 SRCREV_ledgecommon = "1cf0e6d2bdd1145370033d4e182634458528579d"
 
-COMPATIBLE_MACHINE = "(ledge-qemuarm64|ledge-qemuarm)"
+COMPATIBLE_MACHINE = "(ledge-secure-qemuarm64|ledge-qemuarm64|ledge-qemuarm)"
 
 DEPENDS:append = "python3-cryptography-native "
 
