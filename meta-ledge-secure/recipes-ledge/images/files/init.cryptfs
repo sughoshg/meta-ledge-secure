@@ -10,11 +10,17 @@
 # 4. add tpm luks signature for crypto device
 # 5. mount and boot
 
+# qemu debug
+# efidebug boot add -b 1 BootLedge virtio 0:1 efi/boot/bootaa64.efi -i virtio 0:1 ledge-initramfs.rootfs.cpio.gz -s 'console=ttyAMA0,115200 root=UUID=6091b3a4-ce08-3020-93a6-f755a22ef03b rootwait panic=60 rdinit=/bin/sh'
+
+
 ARG_MNT_TARGET=$1
 ARG_ROOT=$2
 
 atexit () {
   [ "$RNGD_PID" ] && kill $RNGD_PID
+  [ "$DBUS_PID" ] && kill $DBUS_PID
+  [ "$ABRMD_PID" ] && kill $ABRMD_PID
 }
 
 trap atexit EXIT
@@ -22,6 +28,9 @@ trap atexit EXIT
 /usr/sbin/rngd -f&
 RNGD_PID=$!
 modprobe tpm_tis
+modprobe blk_dev_dm
+modprobe dm_crypt
+
 rpmb_cid () {
   for f in /sys/class/mmc_host/mmc*/mmc*\:*/cid; do
     # POSIX shells don't expand globbing patterns that match no file
@@ -55,6 +64,12 @@ cryptfs_create_enc_rootfs() {
 	echo "!!!! Warning: erase and encryption is in progress.!!!!"
 	echo "!!!! Do not reset/power off your machine until this process compile.!!!!"
 	echo ""
+
+	mkdir -p /run/dbus
+	dbus-daemon --system
+	DBUS_PID=$!
+	tpm2-abrmd --allow-root &
+	ABRMD_PID=$!
 
 	set -e
 	tpm2_dictionarylockout -c 2> /dev/null
