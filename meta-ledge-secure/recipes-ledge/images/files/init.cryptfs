@@ -43,9 +43,9 @@ rpmb_cid () {
   done
   [ "$CID" ] && echo --rpmb-cid $CID
 }
-tee-supplicant $(rpmb_cid)&
-modprobe tpm_ftpm_tee
 
+tee-supplicant -d $(rpmb_cid)
+modprobe tpm_ftpm_tee
 
 # encrypted luks uuid
 ROOT_UUID="310919c2-aec9-4641-b3d2-111111111111"
