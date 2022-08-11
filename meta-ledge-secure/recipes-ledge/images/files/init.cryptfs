@@ -104,16 +104,14 @@ cryptfs_create_enc_rootfs() {
 	echo "init.cryptfs: root mounted to /rootfs"
 }
 
-# For ftpm TPM pcrs are empty after reboot, do not encrypt rootfs
-# for ftpm untill it will be fixed. For now tested only tpm_tis version.
-readlink /sys/class/tpm/tpm0/device/driver | grep tpm_tis > /dev/null
-if [ $? -ne 0 ]; then
+# For systems which do not have TPM device do mount non ecrypted rootfs
+if [ ! -e /dev/tpm0 ]; then
 	uuid=$(echo $ARG_ROOT | sed s/UUID=//)
 	ROOT_BLK=$(blkid | grep ${uuid} | cut -d":" -f 1)
 	if [ -z "${ROOT_BLK}" ]; then
 		echo "No blk dev matching root=UUID=${uuid} check your /proc/cmdline:"
 		cat /proc/cmdline
-		/sbin/reboot
+		/sbin/halt
 		exit 1
 	fi
 	mount ${ROOT_BLK} /rootfs
