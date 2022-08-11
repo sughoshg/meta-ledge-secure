@@ -10,11 +10,17 @@
 # 4. add tpm luks signature for crypto device
 # 5. mount and boot
 
+# qemu debug
+# efidebug boot add -b 1 BootLedge virtio 0:1 efi/boot/bootaa64.efi -i virtio 0:1 ledge-initramfs.rootfs.cpio.gz -s 'console=ttyAMA0,115200 root=UUID=6091b3a4-ce08-3020-93a6-f755a22ef03b rootwait panic=60 rdinit=/bin/sh'
+
+
 ARG_MNT_TARGET=$1
 ARG_ROOT=$2
 
 atexit () {
   [ "$RNGD_PID" ] && kill $RNGD_PID
+  [ "$DBUS_PID" ] && kill $DBUS_PID
+  [ "$ABRMD_PID" ] && kill $ABRMD_PID
 }
 
 trap atexit EXIT
@@ -22,6 +28,9 @@ trap atexit EXIT
 /usr/sbin/rngd -f&
 RNGD_PID=$!
 modprobe tpm_tis
+modprobe blk_dev_dm
+modprobe dm_crypt
+
 rpmb_cid () {
   for f in /sys/class/mmc_host/mmc*/mmc*\:*/cid; do
     # POSIX shells don't expand globbing patterns that match no file
@@ -34,9 +43,9 @@ rpmb_cid () {
   done
   [ "$CID" ] && echo --rpmb-cid $CID
 }
-tee-supplicant $(rpmb_cid)&
-modprobe tpm_ftpm_tee
 
+tee-supplicant -d $(rpmb_cid)
+modprobe tpm_ftpm_tee
 
 # encrypted luks uuid
 ROOT_UUID="310919c2-aec9-4641-b3d2-111111111111"
@@ -55,6 +64,12 @@ cryptfs_create_enc_rootfs() {
 	echo "!!!! Warning: erase and encryption is in progress.!!!!"
 	echo "!!!! Do not reset/power off your machine until this process compile.!!!!"
 	echo ""
+
+	mkdir -p /run/dbus
+	dbus-daemon --system
+	DBUS_PID=$!
+	tpm2-abrmd --allow-root &
+	ABRMD_PID=$!
 
 	set -e
 	tpm2_dictionarylockout -c 2> /dev/null
@@ -89,16 +104,14 @@ cryptfs_create_enc_rootfs() {
 	echo "init.cryptfs: root mounted to /rootfs"
 }
 
-# For ftpm TPM pcrs are empty after reboot, do not encrypt rootfs
-# for ftpm untill it will be fixed. For now tested only tpm_tis version.
-readlink /sys/class/tpm/tpm0/device/driver | grep tpm_tis > /dev/null
-if [ $? -ne 0 ]; then
+# For systems which do not have TPM device do mount non ecrypted rootfs
+if [ ! -e /dev/tpm0 ]; then
 	uuid=$(echo $ARG_ROOT | sed s/UUID=//)
 	ROOT_BLK=$(blkid | grep ${uuid} | cut -d":" -f 1)
 	if [ -z "${ROOT_BLK}" ]; then
 		echo "No blk dev matching root=UUID=${uuid} check your /proc/cmdline:"
 		cat /proc/cmdline
-		/sbin/reboot
+		/sbin/halt
 		exit 1
 	fi
 	mount ${ROOT_BLK} /rootfs

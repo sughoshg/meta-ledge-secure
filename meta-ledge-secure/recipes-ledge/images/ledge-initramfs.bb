@@ -36,9 +36,9 @@ PACKAGE_INSTALL:append = " \
 	kernel-module-tpm-ftpm-tee \
 	kernel-module-tpm-tis \
 	kernel-module-tpm-tis-core \
+	kernel-module-dm-mod \
+	kernel-module-dm-crypt \
 	"
-
-#   kernel-module-dm-crypt
 
 # Do not pollute the initrd image with rootfs features
 IMAGE_FEATURES = ""
