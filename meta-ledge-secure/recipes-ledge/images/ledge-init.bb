@@ -33,4 +33,5 @@ RDEPENDS:${PN} += "\
     grep \
     gawk \
     ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'udev', 'eudev', d)} \
+    pigz \
 "
