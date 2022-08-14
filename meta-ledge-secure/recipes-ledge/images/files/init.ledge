@@ -27,6 +27,8 @@ for arg in $cmdline; do
     esac
 done
 
+exec >/dev/kmsg 2>&1
+
 [ -z "$ROOTFS_DEV" ] && {
     echo "exiting on missing the kernel parameter root= ..."
     exit 1
