@@ -78,7 +78,7 @@ cryptfs_create_enc_rootfs() {
 	mount ${ROOT_BLK} /mnt
 	cd /mnt/
 	echo "backup filesystem to tmpfs..."
-	tar -czf /tmp/rootfs.tar.gz .
+	tar -cf - . | pigz -c >/tmp/rootfs.tar.gz
 	cd -
 	umount /mnt
 
@@ -98,7 +98,7 @@ cryptfs_create_enc_rootfs() {
 	mkfs.ext4 /dev/mapper/rootfs
 	mount /dev/mapper/rootfs /rootfs
 	cd /rootfs
-	tar xpfz /tmp/rootfs.tar.gz
+	unpigz -c /tmp/rootfs.tar.gz | tar xpf -
 	cd -
 	sync
 	echo "init.cryptfs: root mounted to /rootfs"
