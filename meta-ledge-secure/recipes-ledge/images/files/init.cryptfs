@@ -104,8 +104,7 @@ cryptfs_create_enc_rootfs() {
 	echo "init.cryptfs: root mounted to /rootfs"
 }
 
-# For systems which do not have TPM device do mount non ecrypted rootfs
-if [ ! -e /dev/tpm0 ]; then
+mount_rootfs_from_cmdline () {
 	uuid=$(echo $ARG_ROOT | sed s/UUID=//)
 	ROOT_BLK=$(blkid | grep ${uuid} | cut -d":" -f 1)
 	if [ -z "${ROOT_BLK}" ]; then
@@ -115,8 +114,40 @@ if [ ! -e /dev/tpm0 ]; then
 		exit 1
 	fi
 	mount ${ROOT_BLK} /rootfs
-	echo "Detected TPM: ftpm: does not support persistant PRCs on reboot"
-	echo "Using not encrypted rootfs."
+	return 0
+}
+
+update_parsec_config () {
+    parsec_config="/rootfs/etc/parsec/config.toml"
+    for frag in optee tpm ; do
+        fragfile="/rootfs/etc/parsec/config-fragment-$frag.toml"
+        [ ! -e "$fragfile" ] && continue
+        append=1
+        [ "$frag" = "tpm" -a ! -e /dev/tpm0 ] && append=""
+        [ "$frag" = "optee" ] && {
+            if [ -e /dev/tee0 ]; then
+                echo "Adding user parsec to group teeclnt"
+                /rootfs/usr/sbin/chroot /rootfs /usr/sbin/usermod -a -G teeclnt parsec
+            else
+                append=""
+            fi
+        }
+        [ "$append" ] && {
+            echo "Appending $fragfile to $parsec_config"
+            echo >>$parsec_config
+            echo '# Added by init.ledge' >>$parsec_config
+            cat $fragfile >>$parsec_config
+        }
+        echo "Removing $fragfile"
+        rm -f $fragfile
+    done
+}
+
+# For systems which do not have TPM device do mount non ecrypted rootfs
+if [ ! -e /dev/tpm0 ]; then
+	mount_rootfs_from_cmdline
+	echo "/dev/tpm0 not found: using non encrypted rootfs"
+	update_parsec_config
 	exit 0
 fi
 
@@ -131,10 +162,17 @@ for d in /sys/class/block/*; do
 		clevis luks pass -d $dev -s 1| cryptsetup luksOpen --key-file - $dev rootfs
 		mount /dev/mapper/rootfs /rootfs
 		echo "init.cryptfs: root mounted to /rootfs"
+		update_parsec_config
 		exit 0
 	fi
 done
 
-# No mounted luks, it looks like it's first boot. Then create luks partition
-# for device specified in /proc/cmdline
+# No mounted luks, it looks like it's first boot.
+
+# Configure Parsec providers on first boot
+mount_rootfs_from_cmdline
+update_parsec_config
+umount /rootfs
+
+# Then create luks partition for device specified in /proc/cmdline
 cryptfs_create_enc_rootfs
