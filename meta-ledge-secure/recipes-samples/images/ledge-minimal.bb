@@ -2,7 +2,7 @@ SUMMARY = "Minimal image"
 
 LICENSE = "MIT"
 
-inherit core-image features_check extrausers
+inherit core-image extrausers
 
 IMAGE_FEATURES += "package-management ssh-server-openssh allow-empty-password"
 # REQUIRED_DISTRO_FEATURES = "pam systemd"
