@@ -17,10 +17,12 @@ SRCREV="d8a25e36ba73d91419c69c3ad23d3a24b393d049"
 
 S="${WORKDIR}/git"
 
-inherit meson pkgconfig systemd
+inherit meson pkgconfig systemd features_check
 
 DEPENDS = "jose cmake-native luksmeta openssl tpm2-tools cryptsetup jq libpwquality systemd udisks2"
 RDEPENDS:${PN} = "bash cryptsetup libpwquality"
+
+REQUIRED_DISTRO_FEATURES = "polkit"
 
 FILES:${PN} += "/usr /lib"
 
