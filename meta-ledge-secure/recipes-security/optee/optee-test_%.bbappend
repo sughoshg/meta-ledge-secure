@@ -1,9 +1,9 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
-# 3.16
+
 SRC_URI = "git://github.com/OP-TEE/optee_test.git;protocol=https"
 
-PV="3.16.0+git${SRCPV}"
-SRCREV = "1cf0e6d2bdd1145370033d4e182634458528579d"
+PV="3.18.0+git${SRCPV}"
+SRCREV = "da5282a011b40621a2cf7a296c11a35c833ed91b"
 
 COMPATIBLE_MACHINE = "(ledge-secure-qemuarm64|ledge-qemuarm64|ledge-qemuarm)"
 
@@ -18,4 +18,3 @@ EXTRA_OEMAKE:append = " LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
                     "
 
 SRC_URI:append_arm = " file://0001-Correct-support-of-32bits.patch "
-SRC_URI:append = " file://0001-regression_6000.c-detect-available-storage-IDs-at-ru.patch "
