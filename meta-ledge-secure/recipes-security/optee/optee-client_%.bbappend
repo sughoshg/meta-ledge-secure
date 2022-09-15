@@ -2,17 +2,10 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 COMPATIBLE_MACHINE = "(ledge-secure-qemuarm64|ledge-qemuarm64|ledge-qemuarm)"
 
-# 3.16
-PV="3.16.0+git${SRCPV}"
-SRCREV = "06db73b3f3fdb8d23eceaedbc46c49c0b45fd1e2"
+PV="3.18.0+git${SRCPV}"
+SRCREV = "e7cba71cc6e2ecd02f412c7e9ee104f0a5dffc6f"
 
 SRC_URI:append = " \
-file://0001-libckteec-add-support-for-ECDH-derive.patch \
-	file://0002-tee-supplicant-introduce-struct-tee_supplicant_param.patch \
-	file://0003-tee-supplicant-refactor-argument-parsing-in-main.patch \
-	file://0004-tee-supplicant-rpmb-introduce-readn-wrapper-to-the-r.patch \
-	file://0005-tee-supplicant-rpmb-read-CID-in-one-go.patch \
-	file://0006-tee-supplicant-add-rpmb-cid-command-line-option.patch \
 	file://create-tee-supplicant-env \
         file://optee-udev.rules \
 	"
