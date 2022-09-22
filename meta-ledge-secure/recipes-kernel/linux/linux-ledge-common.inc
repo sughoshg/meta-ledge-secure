@@ -11,6 +11,7 @@ SRC_URI:append = " file://ledge-kmeta;type=kmeta;name=ledge-kmeta;destsuffix=led
 KERNEL_FEATURES:append = " fragment-1-selinux.cfg "
 KERNEL_FEATURES:append = " ${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', 'fragment-2-module-signature.cfg','')} "
 KERNEL_FEATURES:append = " fragment-3-secure.cfg "
+KERNEL_FEATURES:append = " fragment-rockchip-media.cfg"
 KERNEL_FEATURES:append = " defconfig "
 
 do_compile:append:aarch64() {
