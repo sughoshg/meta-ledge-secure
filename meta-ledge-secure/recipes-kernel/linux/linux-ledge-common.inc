@@ -14,6 +14,10 @@ KERNEL_FEATURES:append = " fragment-3-secure.cfg "
 KERNEL_FEATURES:append = " fragment-rockchip-media.cfg"
 KERNEL_FEATURES:append = " defconfig "
 
+SRC_URI += " \
+    file://0003-rk3399-rock-pi-4.dtsi-enable-imx219-isp.patch \
+"
+
 do_compile:append:aarch64() {
     oe_runmake -C ${B} dtbs
 }
