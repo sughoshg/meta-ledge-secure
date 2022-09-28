@@ -1,0 +1,6 @@
+[[provider]]
+name = "tpm-provider"
+provider_type = "Tpm"
+key_info_manager = "sqlite-manager"
+tcti = "device"
+owner_hierarchy_auth = ""

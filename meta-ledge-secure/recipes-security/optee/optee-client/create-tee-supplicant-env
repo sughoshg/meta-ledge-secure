@@ -18,7 +18,7 @@
 # much sooner either, because the kernel's tpm_ftpm_tee driver needs a running
 # supplicant to be able to access RPMB secure storage.
 SUPP_PID=$(pgrep tee-supplicant)
-[ "$SUPP_PID" ] && kill $SUPP_PID
+[ "$SUPP_PID" ] && { kill $SUPP_PID; while pgrep tee-supplicant >/dev/null; do sleep 0.1; done; }
 
 for f in /sys/class/mmc_host/mmc*/mmc*\:*/cid; do
   # POSIX shells don't expand globbing patterns that match no file

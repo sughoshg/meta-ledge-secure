@@ -1,0 +1,5 @@
+[[provider]]
+name = "pkcs11-optee"
+provider_type = "Pkcs11"
+key_info_manager = "sqlite-manager"
+library_path = "/usr/lib/libckteec.so.0"

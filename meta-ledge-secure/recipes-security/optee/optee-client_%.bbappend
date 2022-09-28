@@ -16,7 +16,7 @@ EXTRA_OECMAKE:append = " \
 
 do_install:append() {
 	install -D -p -m0755 ${WORKDIR}/create-tee-supplicant-env ${D}${sbindir}/create-tee-supplicant-env
-        sed -i 's|^ExecStart=.*$|EnvironmentFile=-@localstatedir@/run/tee-supplicant.env\nExecStartPre=@sbindir@/create-tee-supplicant-env @localstatedir@/run/tee-supplicant.env\nExecStart=@sbindir@/tee-supplicant $RPMB_CID $OPTARGS\nExecStop=-/sbin/modprobe -r tpm_ftpm_tee|' ${D}${systemd_system_unitdir}/tee-supplicant.service
+        sed -i 's|^ExecStart=.*$|EnvironmentFile=-@localstatedir@/run/tee-supplicant.env\nExecStartPre=-/sbin/modprobe -r tpm_ftpm_tee\nExecStartPre=@sbindir@/create-tee-supplicant-env @localstatedir@/run/tee-supplicant.env\nExecStart=@sbindir@/tee-supplicant $RPMB_CID $OPTARGS\nExecStartPost=-/sbin/modprobe tpm_ftpm_tee\nExecStop=-/sbin/modprobe -r tpm_ftpm_tee|' ${D}${systemd_system_unitdir}/tee-supplicant.service
 	sed -i -e s:@sbindir@:${sbindir}:g \
 	       -e s:@localstatedir@:${localstatedir}:g ${D}${systemd_system_unitdir}/tee-supplicant.service
 	install -d ${D}${sysconfdir}/udev/rules.d
