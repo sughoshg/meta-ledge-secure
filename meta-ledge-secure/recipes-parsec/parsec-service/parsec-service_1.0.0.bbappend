@@ -11,7 +11,8 @@ do_install:append() {
     if ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'true', '', d)}; then
         install -m 400 -o parsec -g parsec ${WORKDIR}/config-fragment-optee.toml ${D}${sysconfdir}/parsec
         if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-            sed -i 's|^Description=\(.*\)$|Description=\1\nRequires=tee-supplicant.service\nAfter=tee-supplicant.service|' ${D}${systemd_system_unitdir}/parsec.service
+            sed -i 's|^Description=\(.*\)$|Description=\1\nRequires=tee-supplicant.service\nAfter=tee-supplicant.service\nRequires=dev-tpm0.device\nAfter=dev-tpm0.device\n|' \
+                ${D}${systemd_system_unitdir}/parsec.service
         fi
 
     fi
