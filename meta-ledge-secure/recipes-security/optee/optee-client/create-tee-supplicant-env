@@ -12,7 +12,7 @@
 
 [ "$1" ] || { echo Usage: $0 FILE >&2; exit 1; }
 
-# Take care of killing the instance of tee-supplicant started by init.cryptfs
+# Take care of killing the instance of tee-supplicant started by init.ledge
 # in the initramfs, which is not suitable for later use because it cannot
 # load Trusted Applications from the root fs. This instance cannot be killed
 # much sooner either, because the kernel's tpm_ftpm_tee driver needs a running

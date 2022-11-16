@@ -17,6 +17,9 @@ PACKAGE_INSTALL = " \
    ${ROOTFS_BOOTSTRAP_INSTALL} \
    coreutils \
    util-linux-mount \
+   util-linux-umount \
+   util-linux-blkid \
+   kmod \
    grep \
    gawk \
    bash \

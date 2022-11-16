@@ -1,84 +1,240 @@
 #!/bin/sh
+# set -e
 
-PATH="/sbin:/bin:/usr/sbin:/usr/bin"
-ROOTFS_MOUNT="/rootfs"
-INIT="/sbin/init"
 
-mount -t proc none /proc
-mount -t sysfs none /sys
-mount -t devtmpfs none /dev
-mount -t tmpfs none /run
-mount -t tmpfs none /tmp
-mkdir -p /dev/pts
-mount -t devpts devpts /dev/pts
-mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+PATH='/sbin:/bin:/usr/sbin:/usr/bin'
+ROOTFS_MOUNT='/rootfs'
+INIT='/sbin/init'
+# Use comma separated values as the variables feeds into clevis
+PCR_SEAL='7'
 
-cmdline="`cat /proc/cmdline`"
-for arg in $cmdline; do
-    optarg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
-
-    case "$arg" in
-    root=*)
-        ROOTFS_DEV="$optarg"
-        ;;
-    init=*)
-        INIT="$optarg"
-        ;;
-    esac
-done
-
-exec >/dev/kmsg 2>&1
-
-[ -z "$ROOTFS_DEV" ] && {
-    echo "exiting on missing the kernel parameter root= ..."
-    exit 1
+atexit () {
+	[ "$RNGD_PID" ] && kill "$RNGD_PID"
+	[ "$DBUS_PID" ] && kill "$DBUS_PID"
+	[ "$ABRMD_PID" ] && kill "$ABRMD_PID"
 }
 
-echo "ROOTFS_DEV=${ROOTFS_DEV}"
+trap atexit EXIT
 
-mkdir -p "$ROOTFS_MOUNT"
+print_encr_msg() {
+	echo ''
+	echo '!!!! Warning: erase and encryption is in progress.!!!!'
+	echo '!!!! Do not reset/power off your machine until this completes.!!!!'
+	echo ''
+}
 
-try_to_mount_rootfs() {
+rpmb_cid () {
+	for f in /sys/class/mmc_host/mmc*/mmc*\:*/cid; do
+		# POSIX shells don't expand globbing patterns that match no file
+		[ -e "$f" ] || return
+		local devtype=$(echo $f | sed 's/cid/type/')
+		[ ! -e "$devtype" ] && continue
+		[ $(cat $devtype) != 'MMC' ] && continue
+		[ "$cid" ] && { echo "$0": WARNING: multiple eMMC devices found! >&2; return ; }
+		local cid=$(cat $f)
+	done
+	[ "$cid" ] && echo --rpmb-cid "$cid"
+}
+
+setup_env() {
+	mount -t proc none /proc
+	mount -t sysfs none /sys
+	mount -t devtmpfs none /dev
+	mount -t tmpfs none /run
+	mount -t tmpfs none /tmp
+	mkdir -p /dev/pts
+	mount -t devpts devpts /dev/pts
+	mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+	mkdir -p "$ROOTFS_MOUNT"
+
+	# send everything to dmesg and disable ratelimit
+	exec >/dev/kmsg 2>&1
+
+	modprobe dm_crypt || true
+	modprobe tpm_tis_core || true
+	modprobe tpm_tis || true
+
+	# fTPM needs to go after the OP-TEE supplicant
+	tee-supplicant -d $(rpmb_cid)
+	modprobe tpm_ftpm_tee || true
+
+	# start basic services
+	rngd
+	RNGD_PID=$(pidof rngd)
+	if [ -c '/dev/tpm0' ]; then
+		mkdir -p /run/dbus
+		dbus-daemon --system
+		DBUS_PID=$!
+		tpm2-abrmd --allow-root &
+		ABRMD_PID=$!
+		tpm2_dictionarylockout -c 2> /dev/null
+	fi
+
+	echo "Started basic services"
+}
+
+update_parsec_config () {
+    parsec_config="/$ROOTFS_MOUNT/etc/parsec/config.toml"
+    for frag in optee tpm ; do
+        fragfile="/$ROOTFS_MOUNT/etc/parsec/config-fragment-$frag.toml"
+        [ ! -e "$fragfile" ] && continue
+        append=1
+        [ "$frag" = 'tpm' -a ! -e '/dev/tpm0' ] && append=""
+        [ "$frag" = 'optee' ] && {
+            if [ -e '/dev/tee0' ]; then
+                echo 'Adding user parsec to group teeclnt'
+                "$ROOTFS_MOUNT/usr/sbin/chroot" "$ROOTFS_MOUNT" /usr/sbin/usermod -a -G teeclnt parsec
+            else
+                append=""
+            fi
+        }
+        [ "$append" ] && {
+            echo "Appending $fragfile to $parsec_config"
+            echo >>"$parsec_config"
+            echo '# Added by init.ledge' >>"$parsec_config"
+            cat "$fragfile" >>"$parsec_config"
+        }
+        echo "Removing $fragfile"
+        rm -f "$fragfile"
+    done
+}
+
+mount_device() {
+	local dev="$1"
+	local dir="$2"
+	local flags='rw,noatime,iversion'
+
+	mount "$dev" "$dir" -o "$flags"
+}
+
+extend_pcrs() {
+		# Update the PCR we seal against so no one can read the key
+		# NOTE: Because we haven't verified the initramfs yet, anyone may
+		# replace it and read our key. We should upgrade to Linux kernel 5.18.
+		# The kernel measures the initrd on PCR9, which we should add to our 
+		# sealing PCRs.
+		# Since we are probably not running on bash use a standard echo/sed
+		# to convert PCR comma delimited values
+		for i in $(echo $PCR_SEAL | sed "s/,/ /g"); do
+				tpm2_pcrextend $i:sha256=$(dd if=/dev/random bs=1 \
+					count=64 status=none | sha256sum | cut -d "-" -f1)
+		done
+}
+
+open_enc_blk() {
+	clevis luks pass -d "$ROOT_DEV" -s 1 | \
+		cryptsetup luksOpen --key-file - "$ROOT_DEV" rootfs
+}
+
+encrypt_fs() {
+	print_encr_msg
+	mount_device "$ROOT_DEV" '/mnt'
+	cd /mnt/
+	echo "Backup filesystem to tmpfs ..."
+	tar -cf - . | pigz -c >/tmp/rootfs.tar.gz
+	cd - > /dev/null
+	umount /mnt
+
+	echo "Creating LUKS2 volumes ..."
+	#cat /dev/zero > ${ROOT_DEV} 2>/dev/null || true
+	# Create a LUKS2 encrypted volume with empty pass
+	< /dev/urandom tr -dc _A-Z-a-z-0-9[:punct:] | head -c${1:-32} > /tmp/rand_key
+	cryptsetup -q --type luks2 --cipher aes-xts-plain --hash sha256 \
+		--use-random --uuid="$ROOT_UUID" luksFormat "$ROOT_DEV" \
+		--key-file /tmp/rand_key
+	# Bind a random password to our TPM based on PCR7 sha256 PCR bank
+	# TODO: 'clevis luks unbind -d ${ROOT_DEV} -s 1' on failures to
+	# clean up the TPM from unused passwords.
+	local clevis_json="'{\"pcr_bank\":\"sha256\",\"pcr_ids\":\"$PCR_SEAL\"}'"
+	local clevis_cmd="clevis luks bind -y -k /tmp/rand_key -d "$ROOT_DEV" -s 1 tpm2 $clevis_json"
+	eval "$clevis_cmd"
+	shred /tmp/rand_key
+	rm /tmp/rand_key
+
+	echo "Creating encrypted filesystem ..."
+	open_enc_blk
+	mkfs.ext4 -q /dev/mapper/rootfs
+	mount_device '/dev/mapper/rootfs' "$ROOTFS_MOUNT"
+	cd "$ROOTFS_MOUNT"
+	unpigz -c /tmp/rootfs.tar.gz | tar xpf -
+	cd - > /dev/null
+	umount "$ROOTFS_MOUNT"
+	cryptsetup luksClose rootfs
+}
+
+try_encrypt() {
+	[ ! -c '/dev/tpm0' ] && return 0
+	local encr_uuid=$(cryptsetup luksUUID $ROOT_DEV)
+	[ -n "$encr_uuid" -a "$encr_uuid" = "$ROOT_UUID" ] && return 0
+
+	encrypt_fs
+}
+
+try_mount() {
     local mount_flags="rw,noatime,iversion"
+	local is_luks=$(cryptsetup luksUUID $ROOT_DEV)
 
-    [ -x /init.cryptfs ] &&
-        /init.cryptfs "$ROOTFS_MOUNT" "$ROOTFS_DEV" \
-            "$mount_flags" && return 0
-
-    return 1
+	echo "Waiting for root device to be ready ..."
+	if [ -z "$is_luks" ]; then
+		echo "No TPM found.  Mounting unencrypted rootfs"
+		mount_device "$ROOT_DEV" "$ROOTFS_MOUNT"
+	else
+		echo "Mounting encrypted filesystem"
+		open_enc_blk
+		extend_pcrs
+		mount_device '/dev/mapper/rootfs' "$ROOTFS_MOUNT"
+	fi
 }
 
-echo "Waiting for root device to be ready ..."
+find_root_device() {
+	local cmdline=$(cat /proc/cmdline)
+	local rootfs_string=""
+	for arg in $cmdline; do
+		optarg=`expr "x$arg" : 'x[^=]*=\(.*\)'`
+		case "$arg" in
+		root=*)
+			rootfs_string="$optarg"
+		;;
+		esac
+	done
 
-while [ 1 ]; do
-    try_to_mount_rootfs && break
-    sleep 0.1
-done
+	[ -z "$rootfs_string" ] && \
+		echo "exiting on missing the kernel parameter root= ..." && \
+		exit 1
+
+	# We tag our filesystem with a specific filesystem UUID
+	ROOT_UUID=$(echo $rootfs_string | sed s/UUID=//)
+	# busybox blkid can't tell LUKS volumes
+	ROOT_DEV=$(blkid | grep $ROOT_UUID | cut -d':' -f 1)
+	if [ -z "$ROOT_DEV" ]; then
+		echo "No rootfs with rootfs=UUID check you /proc/cmdline:"
+		cat /proc/cmdline
+		exit 1
+	fi
+
+	echo "Found rootfs at $ROOT_DEV"
+}
+
+setup_env
+find_root_device
+try_encrypt
+try_mount
+update_parsec_config
 
 # Move the mount points of some filesystems over to
 # the corresponding directories under the real root filesystem.
 for dir in `cat /proc/mounts | grep -v rootfs | awk '{ print $2 }'` ; do
-    mkdir -p "$ROOTFS_MOUNT"/${dir##*/}
-    mount -nv --move "$dir" "$ROOTFS_MOUNT"/${dir##*/}
+	mkdir -p "$ROOTFS_MOUNT"/${dir##*/}
+	mount -nv --move "$dir" "$ROOTFS_MOUNT"/${dir##*/}
 done
 
 cd "$ROOTFS_MOUNT"
-
-# !!! The Big Fat Warnings !!!
-#
-# The IMA policy may enforce appraising the executable and verifying the
-# signature stored in xattr. However, ramfs doesn't support xattr, and all
-# other initializations must *NOT* be placed after IMA initialization!
-[ -x /init.ima ] && /init.ima "$ROOTFS_MOUNT" && {
-    # switch_root is an exception. We call it in the real rootfs and it
-    # should be already signed properly.
-    switch_root="usr/sbin/switch_root.static"
-} || {
-    switch_root="switch_root"
-}
+switch_root="switch_root"
 
 exec "$switch_root" "$ROOTFS_MOUNT" "$INIT" || {
-    "$ROOTFS_MOUNT/bin/echo.coreutils" "Couldn't switch to the real rootfs"
-    # Cause kernel panic.
-    exit 2
+	"$ROOTFS_MOUNT/bin/echo.coreutils" "Couldn't switch to the real rootfs"
+	# Cause kernel panic.
+	exit 2
 }
+
+exit 0

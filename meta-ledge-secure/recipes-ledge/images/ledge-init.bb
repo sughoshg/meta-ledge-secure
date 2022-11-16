@@ -6,12 +6,10 @@ LIC_FILES_CHKSUM = "\
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI += "file://init.ledge \
-			file://init.cryptfs"
+SRC_URI += "file://init.ledge"
 
 do_install() {
     install -m 0755 ${WORKDIR}/init.ledge ${D}/init
-    install -m 0755 ${WORKDIR}/init.cryptfs ${D}/
 
     # Create device nodes expected by kernel in initramfs
     # before executing /init.
@@ -22,7 +20,6 @@ do_install() {
 
 FILES:${PN} = "\
     /init \
-    /init.cryptfs \
     /dev \
     /run \
 "
