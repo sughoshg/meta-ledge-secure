@@ -2,14 +2,17 @@ inherit kernel siteinfo
 
 DEPENDS += "coreutils-native"
 
-EXTRA_OEMAKE += "${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', 'INSTALL_MOD_STRIP=1','')}"
+# strip kernel modules before signing to reduce module size
+EXTRA_OEMAKE += "INSTALL_MOD_STRIP=1"
 
 FILESEXTRAPATHS:prepend:ewaol := "${THISDIR}:${THISDIR}/linux-yocto:"
 
 SRC_URI:append = " file://ledge-kmeta;type=kmeta;name=ledge-kmeta;destsuffix=ledge-kmeta"
 
+# linux-yocto way of enabling module signing
+KERNEL_FEATURES:append = " features/module-signing/force-signing.scc "
+
 KERNEL_FEATURES:append = " fragment-1-selinux.cfg "
-KERNEL_FEATURES:append = " ${@oe.utils.ifelse(d.getVar('KERNEL_SIGN_ENABLE') == '1', 'fragment-2-module-signature.cfg','')} "
 KERNEL_FEATURES:append = " fragment-3-secure.cfg "
 KERNEL_FEATURES:append = " fragment-rockchip-media.cfg"
 KERNEL_FEATURES:append = " defconfig "
