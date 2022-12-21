@@ -15,6 +15,7 @@ KERNEL_FEATURES:append = " features/module-signing/force-signing.scc "
 KERNEL_FEATURES:append = " fragment-1-selinux.cfg "
 KERNEL_FEATURES:append = " fragment-3-secure.cfg "
 KERNEL_FEATURES:append = " fragment-rockchip-media.cfg"
+KERNEL_FEATURES:append = " fragment-ava.cfg"
 KERNEL_FEATURES:append = " defconfig "
 
 SRC_URI += " \
