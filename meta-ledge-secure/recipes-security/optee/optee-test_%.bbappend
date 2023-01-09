@@ -16,5 +16,3 @@ EXTRA_OEMAKE:append_armv7e = " COMPILE_NS_USER=32"
 EXTRA_OEMAKE:append = " LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
                     CFG_PKCS11_TA=y \
                     "
-
-SRC_URI:append_arm = " file://0001-Correct-support-of-32bits.patch "
