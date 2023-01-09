@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI = "git://github.com/OP-TEE/optee_test.git;protocol=https"
+SRC_URI = "git://github.com/OP-TEE/optee_test.git;protocol=https;branch=master"
 
 PV="3.18.0+git${SRCPV}"
 SRCREV = "da5282a011b40621a2cf7a296c11a35c833ed91b"
