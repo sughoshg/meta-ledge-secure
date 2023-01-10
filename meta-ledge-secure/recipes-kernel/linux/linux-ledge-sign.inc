@@ -1,13 +1,15 @@
 DEPENDS:append = " e2fsprogs-native  efitools-native  coreutils-native "
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files/:"
-SRC_URI:append = " file://uefi-certificates/KEK.auth "
-SRC_URI:append = " file://uefi-certificates/KEK.crt "
-SRC_URI:append = " file://uefi-certificates/KEK.key "
-SRC_URI:append = " file://uefi-certificates/PK.auth "
-SRC_URI:append = " file://uefi-certificates/db.key "
-SRC_URI:append = " file://uefi-certificates/db.crt "
-SRC_URI:append = " file://uefi-certificates/db.auth "
+SRC_URI += " \
+    file://uefi-certificates/KEK.auth \
+    file://uefi-certificates/KEK.crt \
+    file://uefi-certificates/KEK.key \
+    file://uefi-certificates/PK.auth \
+    file://uefi-certificates/db.key \
+    file://uefi-certificates/db.crt \
+    file://uefi-certificates/db.auth \
+"
 
 inherit kernel siteinfo
 
