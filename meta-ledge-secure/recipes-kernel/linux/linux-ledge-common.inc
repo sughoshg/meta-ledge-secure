@@ -9,9 +9,6 @@ FILESEXTRAPATHS:prepend:ewaol := "${THISDIR}:${THISDIR}/linux-yocto:"
 
 SRC_URI:append = " file://ledge-kmeta;type=kmeta;name=ledge-kmeta;destsuffix=ledge-kmeta"
 
-# linux-yocto way of enabling module signing
-KERNEL_FEATURES:append = " features/module-signing/force-signing.scc "
-
 KERNEL_FEATURES:append = " fragment-1-selinux.cfg "
 KERNEL_FEATURES:append = " fragment-3-secure.cfg "
 KERNEL_FEATURES:append = " fragment-rockchip-media.cfg"
