@@ -12,6 +12,7 @@ do_install[nostamp] = "1"
 PACKAGE_INSTALL = " \
    packagegroup-tpm2-initramfs \
    packagegroup-luks \
+   packagegroup-ima-evm-utils \
    ${VIRTUAL-RUNTIME_base-utils} \
    base-passwd \
    ${ROOTFS_BOOTSTRAP_INSTALL} \
@@ -30,6 +31,9 @@ PACKAGE_INSTALL = " \
    tpm2-abrmd \
    tpm2-tss \
    tpm2-tss-engine \
+   initramfs-framework-ima \
+   ibmtpm2tss \
+   ima-evm-utils \
    dbus \
    clevis \
    ledge-init \
